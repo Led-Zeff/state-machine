@@ -61,7 +61,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
   public void configure(StateMachineConfigurationConfigurer<PaymentState, PaymentEvent> config) throws Exception {
     StateMachineListenerAdapter<PaymentState, PaymentEvent> adapter = new StateMachineListenerAdapter<>() {
       public void stateChanged(State<PaymentState, PaymentEvent> from, State<PaymentState, PaymentEvent> to) {
-        log.info("State changed from {} to {}", from, to);
+        log.info("State changed from {} to {}", from.getId(), to.getId());
       }
     };
 
