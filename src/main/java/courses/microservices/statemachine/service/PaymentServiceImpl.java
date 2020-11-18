@@ -43,7 +43,7 @@ public class PaymentServiceImpl implements PaymentService {
   @Transactional
   public StateMachine<PaymentState, PaymentEvent> authorize(Long paymentId) {
     StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
-    sendEvent(paymentId, sm, PaymentEvent.PRE_AUTH_APPROVED);
+    sendEvent(paymentId, sm, PaymentEvent.AUTHORIZE);
     return sm;
   }
   
@@ -51,7 +51,7 @@ public class PaymentServiceImpl implements PaymentService {
   @Transactional
   public StateMachine<PaymentState, PaymentEvent> declined(Long paymentId) {
     StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
-    sendEvent(paymentId, sm, PaymentEvent.PRE_AUTH_DECLINED);
+    sendEvent(paymentId, sm, PaymentEvent.AUTH_DECLINED);
     return sm;
   }
 
