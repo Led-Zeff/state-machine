@@ -1,8 +1,11 @@
 package courses.microservices.statemachine.config;
 
 import java.util.EnumSet;
+import java.util.Random;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
@@ -13,6 +16,7 @@ import org.springframework.statemachine.state.State;
 
 import courses.microservices.statemachine.domain.PaymentEvent;
 import courses.microservices.statemachine.domain.PaymentState;
+import courses.microservices.statemachine.service.PaymentServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -32,7 +36,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
 
   @Override
   public void configure(StateMachineTransitionConfigurer<PaymentState, PaymentEvent> transitions) throws Exception {
-    transitions.withExternal().source(PaymentState.NEW).target(PaymentState.NEW).event(PaymentEvent.PRE_AUTHORIZE)
+    transitions.withExternal().source(PaymentState.NEW).target(PaymentState.NEW).event(PaymentEvent.PRE_AUTHORIZE).action(preAuthAction())
       .and()
       .withExternal().source(PaymentState.NEW).target(PaymentState.PRE_AUTH).event(PaymentEvent.PRE_AUTH_APPROVED)
       .and()
@@ -54,6 +58,27 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
     };
 
     config.withConfiguration().listener(adapter);
+  }
+
+  public Action<PaymentState, PaymentEvent> preAuthAction() {
+    return context -> {
+      log.info("Pre auth was called");
+
+      PaymentEvent paymentEvent;
+      if (new Random().nextInt(10) < 8) {
+        log.info("Approved");
+        paymentEvent = PaymentEvent.PRE_AUTH_APPROVED;
+      } else {
+        log.info("Declined");
+        paymentEvent = PaymentEvent.PRE_AUTH_DECLINED;
+      }
+
+      context.getStateMachine().sendEvent(MessageBuilder
+        .withPayload(paymentEvent)
+        .setHeader(PaymentServiceImpl.PAYMENT_ID_HEADER, context.getMessageHeader(PaymentServiceImpl.PAYMENT_ID_HEADER))
+        .build()
+      );
+    };
   }
 
 }
